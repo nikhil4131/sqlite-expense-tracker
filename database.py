@@ -1,12 +1,15 @@
 import sqlite3
-
+def format_date(date_value):
+    if hasattr(date_value, "isoformat"):
+        return date_value.isoformat()
+    return date_value
 
 
 def save_expense(cursor, connection, amount, category, description, date):
     cursor.execute("""
                    INSERT INTO expenses (amount, category, description, date)
                    VALUES (?, ?, ?, ?)
-                   """, (amount, category, description, date))
+                   """, (amount, category, description, format_date(date)))
 
     connection.commit()
 
@@ -21,7 +24,7 @@ def update_expense_record(
                    UPDATE expenses
                    SET amount = ?, category = ?, description = ?, date = ?
                    WHERE id = ?
-                   """, (amount, category, description, date, expense_id))
+                   """, (amount, category, description, format_date(date), expense_id))
 
     connection.commit()
 
@@ -78,13 +81,6 @@ def get_expenses_by_date_range(cursor, start_date, end_date):
                    """, (start_date, end_date))
 
     return cursor.fetchall()
-
-def get_expense_by_id(cursor, expense_id):
-    cursor.execute(
-        "SELECT * FROM expenses WHERE id = ?",
-        (expense_id,)
-    )
-    return cursor.fetchone()
 
 def get_expense_by_id(cursor, expense_id):
     cursor.execute(
