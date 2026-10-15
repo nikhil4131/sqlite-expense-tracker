@@ -1,28 +1,68 @@
 # Expense Tracker
 
-A full-stack personal expense tracking application built with Python, FastAPI, SQLite, HTML, CSS, and JavaScript.
+A full-stack expense tracking application built with Python, FastAPI, JavaScript, and PostgreSQL. It allows users to record expenses, manage transactions, and view spending summaries through a dashboard.
 
-Track expenses, analyze spending patterns, and manage transactions through a browser-based dashboard.
+**Live Demo:** [Expense Tracker Dashboard](https://expense-tracker-dashboard-z9zx.onrender.com/)
 
+## Dashboard Preview
+
+![Expense Tracker Dashboard](screenshots/dashboard.png)
 ## Features
 
-- **Expense management:** Create, view, edit, and delete expenses.
-- **Dashboard statistics:** View total spending, transaction count, and highest-spending category.
-- **Expense analytics:** Analyze monthly spending and category breakdowns with visual bars.
-- **Month filtering:** Filter category analytics by month.
-- **Input validation:** Validate positive amounts, category lengths, descriptions, and calendar dates.
-- **Automated tests:** Test database operations and API behavior using pytest.
+- **Expense management:** Add, view, edit, and delete expenses.
+- **Expense categorization:** Organize expenses by category.
+- **Dashboard analytics:** View total spending, number of expenses, and top spending category.
+- **Monthly summaries:** Visualize expenses across different months.
+- **Category analytics:** Compare spending across expense categories.
+- **Month filtering:** Filter expenses by month.
+- **Persistent storage:** Store expense records in a database.
+- **REST API:** Access expense data through a FastAPI backend.
+- **Responsive dashboard:** Access the application through a web browser.
 
 ## Tech Stack
 
 | Technology | Purpose |
 |---|---|
 | Python | Application logic |
-| FastAPI | REST API |
-| SQLite | Persistent expense storage |
-| HTML and CSS | Dashboard structure and styling |
-| JavaScript | API integration and dashboard updates |
-| pytest | Automated testing |
+| FastAPI | Backend REST API |
+| HTML | Dashboard structure |
+| CSS | Dashboard styling |
+| JavaScript | Frontend interactions and API requests |
+| PostgreSQL | Production database |
+| SQLite | Local development and testing |
+| Psycopg | PostgreSQL connectivity |
+| Pytest | Automated testing |
+| Git and GitHub | Version control and source code hosting |
+| Render | Frontend and backend deployment |
+| Supabase | Hosted PostgreSQL database |
+
+## Architecture
+
+The application follows a simple client-server architecture.
+
+```text
+User
+ |
+ v
+HTML / CSS / JavaScript Dashboard
+ |
+ | HTTP requests
+ v
+FastAPI Backend
+ |
+ | Database queries
+ v
+PostgreSQL (production)
+SQLite (local development/tests)
+```
+
+The dashboard sends HTTP requests to the FastAPI backend. The backend validates requests and performs database operations. The resulting data is returned to the frontend as JSON and displayed in the dashboard.
+
+## Live Application
+
+- **Frontend:** [Open Dashboard](https://expense-tracker-dashboard-z9zx.onrender.com/)
+- **Backend API:** [View Expenses API](https://expense-tracker-api-kg8k.onrender.com/expenses)
+- **Interactive API Documentation:** [Open Swagger UI](https://expense-tracker-api-kg8k.onrender.com/docs)
 
 ## Project Structure
 
@@ -33,96 +73,73 @@ SQL_EXPENSE_TRACKER/
 ├── dashboard/
 │   ├── index.html
 │   ├── style.css
-│   └── script.js
-├── database.py
+│   ├── script.js
+│   └── favicon.svg
 ├── main.py
+├── database.py
+├── db_config.py
+├── postgres_database.py
+├── requirements.txt
 ├── test_expense_tracker.py
 ├── test_api.py
-├── expenses.db
+├── test_db_config.py
+├── test_postgres_connection.py
 ├── .gitignore
 └── README.md
 ```
 
-## Getting Started
+*Note: This tree lists the expected project files; adjust it if your current repository differs.*
+
+## Run Locally
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/nikhil4131/sqlite-expense-tracker.git
+git clone <https://expense-tracker-dashboard-z9zx.onrender.com/>
 cd SQL_EXPENSE_TRACKER
 ```
 
-### 2. Create and activate a virtual environment
+Replace the placeholder with your actual GitHub repository URL.
 
-Windows:
+### 2. Create a virtual environment
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+```
+
+Activate it on Windows:
+
+```powershell
+.venv\Scripts\Activate.ps1
+```
+
+If PowerShell blocks activation, you can use Command Prompt instead:
+
+```bat
+.venv\Scripts\activate.bat
 ```
 
 ### 3. Install dependencies
 
 ```bash
-python -m pip install fastapi uvicorn pytest httpx
+pip install -r requirements.txt
 ```
 
-### 4. Start the API
+### 4. Configure environment variables
 
-From the project root:
+Create a `.env` file in the project root for the database connection when using PostgreSQL.
+
+```env
+DATABASE_URL=your_postgresql_connection_string
+```
+
+Replace the placeholder with your own connection string. Never commit `.env` or expose database credentials in your repository.
+
+When using SQLite locally, follow the database configuration implemented in the project.
+
+### 5. Start the backend
+
+From the project root, run:
 
 ```bash
-python -m uvicorn api.main:app --reload
-```
-
-API documentation:
-
-http://127.0.0.1:8000/docs
-
-### 5. Start the dashboard
-
-Open a second terminal in the project root:
-
-```bash
-python -m http.server 5500 --directory dashboard
-```
-
-Dashboard:
-
-http://127.0.0.1:5500/
-
-Keep both servers running while using the application.
-
-## API Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/health` | Check API health |
-| GET | `/expenses` | Retrieve expenses |
-| POST | `/expenses` | Create an expense |
-| PUT | `/expenses/{expense_id}` | Update an expense |
-| DELETE | `/expenses/{expense_id}` | Delete an expense |
-
-Interactive API documentation is available at `/docs` while the API server is running.
-
-## Running Tests
-
-Run the complete test suite:
-
-```bash
-python -m pytest -v
-```
-
-The API tests use a temporary database to avoid modifying your personal expense records.
-
-## Future Improvements
-
-- User authentication and personal accounts
-- More advanced spending charts and reports
-- Pagination and search
-- Deployment to a public hosting platform
-- Improved accessibility and user experience
-
-## Author
-
-Developed as a personal full-stack project to practice Python, REST APIs, relational databases, frontend integration, and automated testing.
+uvicorn api.main:app --reload
