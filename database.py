@@ -1,6 +1,7 @@
 import sqlite3
 
 
+
 def save_expense(cursor, connection, amount, category, description, date):
     cursor.execute("""
                    INSERT INTO expenses (amount, category, description, date)
@@ -8,6 +9,9 @@ def save_expense(cursor, connection, amount, category, description, date):
                    """, (amount, category, description, date))
 
     connection.commit()
+
+    return cursor.lastrowid
+
 
 
 def update_expense_record(
@@ -41,11 +45,11 @@ def initialize_database():
 
     cursor.execute("""
                    CREATE TABLE IF NOT EXISTS expenses (
-                                                           id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                                           amount REAL NOT NULL,
-                                                           category TEXT NOT NULL,
-                                                           description TEXT,
-                                                           date TEXT NOT NULL
+                   id INTEGER PRIMARY KEY AUTOINCREMENT,
+                   amount REAL NOT NULL,
+                   category TEXT NOT NULL,
+                   description TEXT,
+                   date TEXT NOT NULL
                    )
                    """)
 
