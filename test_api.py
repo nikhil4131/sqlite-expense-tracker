@@ -7,9 +7,10 @@ from fastapi.testclient import TestClient
 from api import main as api_main
 
 
+
 @pytest.fixture
 def client(tmp_path, monkeypatch):
-    # Create a separate database for each test.
+    # Create a separate SQLite database for each test.
     test_db = tmp_path / "test_expenses.db"
 
     def test_initialize_database():
@@ -29,14 +30,20 @@ def client(tmp_path, monkeypatch):
         connection.commit()
         return connection, cursor
 
-    # Redirect API database access to the test database.
+    # Force API requests to use SQLite during tests.
     monkeypatch.setattr(
         api_main,
         "initialize_database",
-        test_initialize_database
+        test_initialize_database,
+    )
+    monkeypatch.setattr(
+        api_main,
+        "use_postgres",
+        lambda: False,
     )
 
     return TestClient(api_main.app)
+
 
 
 def test_get_expenses_returns_empty_list(client):
