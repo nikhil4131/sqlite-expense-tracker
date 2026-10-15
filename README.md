@@ -1,83 +1,128 @@
-# SQLite Expense Tracker
+# Expense Tracker
 
-A command-line expense tracking application built with Python and SQLite. It allows users to record, view, update, delete, and analyze their expenses through a menu-driven interface.
+A full-stack personal expense tracking application built with Python, FastAPI, SQLite, HTML, CSS, and JavaScript.
+
+Track expenses, analyze spending patterns, and manage transactions through a browser-based dashboard.
 
 ## Features
 
-- **Add Expenses:** Record an amount, category, description, and date.
-- **View Expenses:** Display saved expenses.
-- **Update Expenses:** Modify existing expense records.
-- **Delete Expenses:** Remove expenses with an ID-based selection.
-- **Spending Summary:** Calculate total expenses and category-wise spending.
-- **Filter by Date:** View expenses within a specified date range.
-- **Input Validation:** Handle invalid amounts, dates, and expense IDs.
-- **SQLite Database:** Store expense records persistently.
-- **Unit Testing:** Test database operations using Python's `unittest` framework and temporary databases.
+- **Expense management:** Create, view, edit, and delete expenses.
+- **Dashboard statistics:** View total spending, transaction count, and highest-spending category.
+- **Expense analytics:** Analyze monthly spending and category breakdowns with visual bars.
+- **Month filtering:** Filter category analytics by month.
+- **Input validation:** Validate positive amounts, category lengths, descriptions, and calendar dates.
+- **Automated tests:** Test database operations and API behavior using pytest.
 
-## Technologies Used
+## Tech Stack
 
-- Python
-- SQLite
-- `unittest`
-- `tempfile`
+| Technology | Purpose |
+|---|---|
+| Python | Application logic |
+| FastAPI | REST API |
+| SQLite | Persistent expense storage |
+| HTML and CSS | Dashboard structure and styling |
+| JavaScript | API integration and dashboard updates |
+| pytest | Automated testing |
 
 ## Project Structure
 
 ```text
 SQL_EXPENSE_TRACKER/
-├── main.py
+├── api/
+│   └── main.py
+├── dashboard/
+│   ├── index.html
+│   ├── style.css
+│   └── script.js
 ├── database.py
+├── main.py
 ├── test_expense_tracker.py
+├── test_api.py
 ├── expenses.db
+├── .gitignore
 └── README.md
 ```
 
-`expenses.db` is created automatically when the application initializes its database. Do not commit personal expense data to a public repository.
+## Getting Started
 
-## Requirements
-
-- Python 3.10 or later recommended
-- No third-party packages required
-
-## How to Run
-
-1. Clone or download this repository.
-2. Open a terminal in the project directory.
-3. Run the application:
+### 1. Clone the repository
 
 ```bash
-python main.py
+git clone https://github.com/nikhil4131/sqlite-expense-tracker.git
+cd SQL_EXPENSE_TRACKER
 ```
 
-4. Follow the on-screen menu to manage your expenses.
+### 2. Create and activate a virtual environment
 
-## Run the Tests
-
-Run the test suite with:
+Windows:
 
 ```bash
-python -m unittest -v test_expense_tracker
+python -m venv .venv
+.venv\Scripts\activate
 ```
 
-The tests use a temporary SQLite database so they can verify database operations without modifying your normal expense database.
+### 3. Install dependencies
 
-## What I Learned
+```bash
+python -m pip install fastapi uvicorn pytest httpx
+```
 
-- Working with SQLite and SQL queries
-- Separating database operations from application logic
-- Building a menu-driven command-line application
-- Validating user input and handling errors
-- Writing unit tests with Python's `unittest`
-- Using temporary databases for isolated testing
+### 4. Start the API
+
+From the project root:
+
+```bash
+python -m uvicorn api.main:app --reload
+```
+
+API documentation:
+
+http://127.0.0.1:8000/docs
+
+### 5. Start the dashboard
+
+Open a second terminal in the project root:
+
+```bash
+python -m http.server 5500 --directory dashboard
+```
+
+Dashboard:
+
+http://127.0.0.1:5500/
+
+Keep both servers running while using the application.
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Check API health |
+| GET | `/expenses` | Retrieve expenses |
+| POST | `/expenses` | Create an expense |
+| PUT | `/expenses/{expense_id}` | Update an expense |
+| DELETE | `/expenses/{expense_id}` | Delete an expense |
+
+Interactive API documentation is available at `/docs` while the API server is running.
+
+## Running Tests
+
+Run the complete test suite:
+
+```bash
+python -m pytest -v
+```
+
+The API tests use a temporary database to avoid modifying your personal expense records.
 
 ## Future Improvements
 
-- Monthly and yearly spending reports
-- Export expenses to CSV
-- Budget limits and spending alerts
-- Improved command-line interface
-- More automated tests for edge cases
+- User authentication and personal accounts
+- More advanced spending charts and reports
+- Pagination and search
+- Deployment to a public hosting platform
+- Improved accessibility and user experience
 
-## License
+## Author
 
-This project is available for educational and portfolio use. Add a license file if you want to specify formal reuse and distribution permissions.
+Developed as a personal full-stack project to practice Python, REST APIs, relational databases, frontend integration, and automated testing.
