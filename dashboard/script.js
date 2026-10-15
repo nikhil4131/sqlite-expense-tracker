@@ -1,4 +1,4 @@
-const API_URL = "https://expense-tracker-dashboard-z9zx.onrender.com";
+const API_URL = "https://expense-tracker-api-kg8k.onrender.com/expenses";
 
 async function loadExpenses() {
     try {
