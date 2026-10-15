@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/expenses";
+const API_URL = "https://expense-tracker-dashboard-z9zx.onrender.com";
 
 async function loadExpenses() {
     try {
