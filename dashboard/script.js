@@ -3,6 +3,17 @@ const API_URL = "https://expense-tracker-api-kg8k.onrender.com/expenses";
 async function loadExpenses() {
     try {
         const response = await fetch(API_URL);
+
+        if (!response.ok) {
+            throw new Error(`API request failed: ${response.status}`);
+        }
+
+        const contentType = response.headers.get("content-type") || "";
+
+        if (!contentType.includes("application/json")) {
+            throw new Error("API returned HTML or another non-JSON response.");
+        }
+
         const expenses = await response.json();
 
 
@@ -201,6 +212,14 @@ async function loadExpenses() {
 
         document.getElementById("total-expenses").textContent =
             "Unable to load expenses";
+
+        document.getElementById("expense-count").textContent = "—";
+        document.getElementById("top-category").textContent = "—";
+        document.getElementById("expense-list").innerHTML = "";
+        document.getElementById("monthly-chart").textContent =
+            "Unable to load monthly chart.";
+        document.getElementById("category-chart").textContent =
+            "Unable to load category chart.";
     }
 }
 
