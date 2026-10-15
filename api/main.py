@@ -37,12 +37,17 @@ app = FastAPI(lifespan=lifespan)
 def use_postgres():
     return bool(os.getenv("DATABASE_URL", "").strip())
 
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5500"],
+    allow_origins=[
+        "http://127.0.0.1:5500",
+        "https://expense-tracker-dashboard-z9zx.onrender.com",
+    ],
     allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
 
 
 class ExpenseCreate(BaseModel):
