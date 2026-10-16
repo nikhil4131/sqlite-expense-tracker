@@ -1,3 +1,10 @@
+const SUPABASE_URL = "https://ofsjdrhpnqjeqhuuazmo.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_g2pivdmPtUrCeXmGhhwFoA_iKdDUNY-";
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_PUBLISHABLE_KEY
+);
 const API_URL = "https://expense-tracker-api-kg8k.onrender.com/expenses";
 
 async function loadExpenses() {
