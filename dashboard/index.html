@@ -13,6 +13,42 @@
         <p>Your personal spending dashboard</p>
     </header>
 
+    <section id="auth-section">
+        <h2>Account</h2>
+
+        <form id="auth-form">
+            <label for="auth-email">Email</label>
+            <input
+                    type="email"
+                    id="auth-email"
+                    required
+            >
+
+            <label for="auth-password">Password</label>
+            <input
+                    type="password"
+                    id="auth-password"
+                    minlength="8"
+                    required
+            >
+
+            <button type="button" id="signup-button">
+                Create Account
+            </button>
+
+            <button type="button" id="login-button">
+                Log In
+            </button>
+
+            <button type="button" id="logout-button" hidden>
+                Log Out
+            </button>
+        </form>
+
+        <p id="auth-message" role="status"></p>
+    </section>
+
+
     <main>
 
         <section class="add-expense-section">

@@ -5,6 +5,72 @@ const supabaseClient = window.supabase.createClient(
     SUPABASE_URL,
     SUPABASE_PUBLISHABLE_KEY
 );
+
+const authForm = document.getElementById("auth-form");
+const authMessage = document.getElementById("auth-message");
+const signupButton = document.getElementById("signup-button");
+const loginButton = document.getElementById("login-button");
+const logoutButton = document.getElementById("logout-button");
+
+function updateAuthUI(session) {
+    const loggedIn = Boolean(session);
+
+    signupButton.hidden = loggedIn;
+    loginButton.hidden = loggedIn;
+    logoutButton.hidden = !loggedIn;
+
+    document.getElementById("auth-email").disabled = loggedIn;
+    document.getElementById("auth-password").disabled = loggedIn;
+
+    document.querySelector("main").hidden = !loggedIn;
+
+    if (loggedIn) {
+        authMessage.textContent = "You are logged in.";
+    } else {
+        authMessage.textContent = "Please log in to view your dashboard.";
+    }
+}
+
+signupButton.addEventListener("click", async () => {
+    const email = document.getElementById("auth-email").value.trim();
+    const password = document.getElementById("auth-password").value;
+
+    authMessage.textContent = "Creating account...";
+
+    const { error } = await supabaseClient.auth.signUp({
+        email,
+        password
+    });
+
+    authMessage.textContent = error
+        ? error.message
+        : "Registration submitted. Check your email if confirmation is required.";
+});
+
+loginButton.addEventListener("click", async () => {
+    const email = document.getElementById("auth-email").value.trim();
+    const password = document.getElementById("auth-password").value;
+
+    authMessage.textContent = "Logging in...";
+
+    const { error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password
+    });
+
+    authMessage.textContent = error
+        ? error.message
+        : "Login successful.";
+});
+
+logoutButton.addEventListener("click", async () => {
+    const { error } = await supabaseClient.auth.signOut();
+
+    authMessage.textContent = error
+        ? error.message
+        : "Logged out successfully.";
+});
+
 const API_URL = "https://expense-tracker-api-kg8k.onrender.com/expenses";
 
 async function loadExpenses() {
@@ -230,7 +296,29 @@ async function loadExpenses() {
     }
 }
 
-loadExpenses();
+
+supabaseClient.auth.onAuthStateChange((_event, session) => {
+    updateAuthUI(session);
+
+    if (session) {
+        void loadExpenses();
+    }
+});
+
+async function initializeAuth() {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error) {
+        authMessage.textContent = "Could not check login status.";
+        console.error("Could not get session:", error);
+        return;
+    }
+
+    updateAuthUI(data.session);
+}
+
+initializeAuth();
+
 
 const expenseForm = document.getElementById("expense-form");
 const formMessage = document.getElementById("form-message");
