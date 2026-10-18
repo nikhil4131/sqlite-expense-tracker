@@ -6,6 +6,18 @@ const supabaseClient = window.supabase.createClient(
     SUPABASE_PUBLISHABLE_KEY
 );
 
+async function getAuthHeaders() {
+    const { data, error } = await supabaseClient.auth.getSession();
+
+    if (error || !data.session) {
+        throw new Error("Please log in to continue.");
+    }
+
+    return {
+        "Authorization": `Bearer ${data.session.access_token}`
+    };
+}
+
 const authForm = document.getElementById("auth-form");
 const authMessage = document.getElementById("auth-message");
 const signupButton = document.getElementById("signup-button");
@@ -75,7 +87,9 @@ const API_URL = "https://expense-tracker-api-kg8k.onrender.com/expenses";
 
 async function loadExpenses() {
     try {
-        const response = await fetch(API_URL);
+        const response = await fetch(API_URL, {
+            headers: await getAuthHeaders()
+        });
 
         if (!response.ok) {
             throw new Error(`API request failed: ${response.status}`);
@@ -344,7 +358,8 @@ expenseForm.addEventListener("submit", async function (event) {
             {
                 method: expenseId ? "PUT" : "POST",
                 headers: {
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
+                    ...await getAuthHeaders()
                 },
                 body: JSON.stringify(expense)
             }
@@ -409,7 +424,10 @@ async function deleteExpense(expenseId) {
     try {
         const response = await fetch(
             `${API_URL}/${expenseId}`,
-            { method: "DELETE" }
+            { method: "DELETE",
+                    headers: await getAuthHeaders()
+
+            }
         );
 
         if (!response.ok) {

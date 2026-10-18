@@ -1,5 +1,13 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException
+from fastapi import (
+    FastAPI,
+    HTTPException,
+    Depends,
+    status,
+    Path
+)
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import httpx
 from fastapi.middleware.cors import CORSMiddleware
 from database import (initialize_database,
                       get_all_expenses,
@@ -33,6 +41,62 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+
+security = HTTPBearer(auto_error=False)
+
+
+def get_current_user(
+        credentials: HTTPAuthorizationCredentials | None = Depends(security),
+):
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    token = credentials.credentials
+
+    supabase_url = os.getenv("SUPABASE_URL", "").strip()
+    publishable_key = os.getenv("SUPABASE_PUBLISHABLE_KEY", "").strip()
+
+    if not supabase_url or not publishable_key:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Authentication is not configured",
+        )
+
+    try:
+        response = httpx.get(
+            f"{supabase_url}/auth/v1/user",
+            headers={
+                "apikey": publishable_key,
+                "Authorization": f"Bearer {token}",
+            },
+            timeout=5.0,
+        )
+    except httpx.RequestError:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Authentication service unavailable",
+        )
+
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired access token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    user = response.json()
+
+    if not user.get("id"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid user response",
+        )
+
+    return user
 
 def use_postgres():
     return bool(os.getenv("DATABASE_URL", "").strip())
@@ -71,20 +135,29 @@ class ExpenseCreate(BaseModel):
     def clean_description(cls, value):
         return value.strip()
 
-
 @app.get("/health")
 def check_health():
     return {"status": "healthy"}
 
-
 @app.get("/expenses")
-def get_expenses():
+def get_expenses(user: dict = Depends(get_current_user)):
+    user_id = user["id"]
+
     if use_postgres():
         connection = get_postgres_connection()
 
         try:
             with connection.cursor() as cursor:
-                expenses = get_all_postgres_expenses(cursor)
+                cursor.execute(
+                    """
+                    SELECT id, amount, category, description, date
+                    FROM public.expenses
+                    WHERE user_id = %s
+                    ORDER BY date DESC, id DESC
+                    """,
+                    (user_id,)
+                )
+                expenses = cursor.fetchall()
 
             return [
                 {
@@ -101,6 +174,7 @@ def get_expenses():
         finally:
             connection.close()
 
+    # Keep local SQLite development working for now.
     connection, cursor = initialize_database()
 
     try:
@@ -121,8 +195,12 @@ def get_expenses():
 
 
 
+
 @app.post("/expenses")
-def create_expense(expense: ExpenseCreate):
+def create_expense(
+        expense: ExpenseCreate,
+        user: dict = Depends(get_current_user),
+):
     if use_postgres():
         connection = get_postgres_connection()
 
@@ -135,6 +213,7 @@ def create_expense(expense: ExpenseCreate):
                     expense.category,
                     expense.description,
                     expense.date,
+                    user["id"],
                 )
 
             return {
@@ -178,15 +257,26 @@ def create_expense(expense: ExpenseCreate):
 
 
 @app.put("/expenses/{expense_id}")
-def update_expense(expense_id: int, expense: ExpenseCreate):
+def update_expense(
+        expense: ExpenseCreate,
+        expense_id: int = Path(ge=1),
+        user: dict = Depends(get_current_user),
+                   ):
     if use_postgres():
         connection = get_postgres_connection()
 
         try:
             with connection.cursor() as cursor:
-                existing = get_postgres_expense_by_id(
-                    cursor, expense_id
+                cursor.execute(
+                    """
+                    SELECT id
+                    FROM public.expenses
+                    WHERE id = %s AND user_id = %s
+                    """,
+                    (expense_id, user["id"]),
                 )
+
+                existing = cursor.fetchone()
 
                 if existing is None:
                     raise HTTPException(
@@ -202,6 +292,7 @@ def update_expense(expense_id: int, expense: ExpenseCreate):
                     expense.category,
                     expense.description,
                     expense.date,
+                    user["id"],
                 )
 
             return {
@@ -245,15 +336,25 @@ def update_expense(expense_id: int, expense: ExpenseCreate):
 
 
 @app.delete("/expenses/{expense_id}")
-def delete_expense(expense_id: int):
+def delete_expense(
+        expense_id: int = Path(ge=1),
+        user: dict = Depends(get_current_user),
+):
     if use_postgres():
         connection = get_postgres_connection()
 
         try:
             with connection.cursor() as cursor:
-                existing = get_postgres_expense_by_id(
-                    cursor, expense_id
+                cursor.execute(
+                    """
+                    SELECT id
+                    FROM public.expenses
+                    WHERE id = %s AND user_id = %s
+                    """,
+                    (expense_id, user["id"]),
                 )
+
+                existing = cursor.fetchone()
 
                 if existing is None:
                     raise HTTPException(
@@ -262,7 +363,7 @@ def delete_expense(expense_id: int):
                     )
 
                 delete_postgres_expense(
-                    cursor, connection, expense_id
+                    cursor, connection, expense_id, user["id"]
                 )
 
             return {

@@ -48,15 +48,15 @@ def get_all_postgres_expenses(cursor):
 
 
 def save_postgres_expense(
-        cursor, connection, amount, category, description, date
+        cursor, connection, amount, category, description, date, user_id
 ):
     cursor.execute(
         """
-        INSERT INTO expenses (amount, category, description, date)
-        VALUES (%s, %s, %s, %s)
+        INSERT INTO expenses (amount, category, description, date, user_id)
+        VALUES (%s, %s, %s, %s, %s)
             RETURNING id
         """,
-        (amount, category, description, date)
+        (amount, category, description, date, user_id)
     )
     expense_id = cursor.fetchone()[0]
     connection.commit()
@@ -65,24 +65,29 @@ def save_postgres_expense(
 
 def update_postgres_expense(
         cursor, connection, expense_id,
-        amount, category, description, date
+        amount, category, description, date, user_id
 ):
     cursor.execute(
         """
         UPDATE expenses
         SET amount = %s, category = %s,
             description = %s, date = %s
-        WHERE id = %s
+        WHERE id = %s AND user_id = %s
         """,
-        (amount, category, description, date, expense_id)
+        (amount, category, description, date, expense_id, user_id)
     )
     connection.commit()
 
 
-def delete_postgres_expense(cursor, connection, expense_id):
+def delete_postgres_expense(
+        cursor, connection, expense_id, user_id
+):
     cursor.execute(
-        "DELETE FROM expenses WHERE id = %s",
-        (expense_id,)
+        """
+        DELETE FROM public.expenses
+        WHERE id = %s AND user_id = %s
+        """,
+        (expense_id, user_id),
     )
     connection.commit()
 

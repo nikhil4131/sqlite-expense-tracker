@@ -33,15 +33,21 @@ def client(tmp_path, monkeypatch):
     # Force API requests to use SQLite during tests.
     monkeypatch.setattr(
         api_main,
-        "initialize_database",
-        test_initialize_database,
-    )
-    monkeypatch.setattr(
-        api_main,
         "use_postgres",
         lambda: False,
     )
 
+    monkeypatch.setattr(
+        api_main,
+        "initialize_database",
+        test_initialize_database,
+    )
+
+    monkeypatch.setitem(
+        api_main.app.dependency_overrides,
+        api_main.get_current_user,
+        lambda: {"id": "test-user-123"},
+    )
     return TestClient(api_main.app)
 
 
@@ -184,3 +190,13 @@ def test_create_expense_rejects_invalid_date(client):
     )
 
     assert response.status_code == 422
+
+def test_get_expenses_requires_authentication(client):
+    api_main.app.dependency_overrides.pop(
+        api_main.get_current_user,
+        None,
+    )
+
+    response = client.get("/expenses")
+
+    assert response.status_code == 401
